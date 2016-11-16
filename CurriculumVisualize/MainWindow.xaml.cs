@@ -32,7 +32,11 @@ namespace CurriculumVisualize
             CourseList = new List<Course>();
             CourseBox.ItemsSource = CourseList;
         }
-
+        /// <summary>
+        /// Method to add a course to the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button_Click(object sender, RoutedEventArgs e)
         {
             var courseName = NameField.Text;
@@ -48,7 +52,11 @@ namespace CurriculumVisualize
                 CourseBox.ItemsSource = CourseList;
             }
         }
-
+        /// <summary>
+        /// Method to handle adding a prerequisite
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AddReq_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -71,7 +79,11 @@ namespace CurriculumVisualize
         {
 
         }
-
+        /// <summary>
+        /// Gets the currently selected item in the Course Box and displays their requirements (if any) in the prerequisite box
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CourseBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -86,7 +98,11 @@ namespace CurriculumVisualize
 
             } 
         }
-
+        /// <summary>
+        /// Construct a Graphviz dot file from the courses
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button_Click_1(object sender, RoutedEventArgs e)
         {
             try
@@ -184,6 +200,9 @@ namespace CurriculumVisualize
             CourseBox.ItemsSource = CourseList;
         }
     }
+    /// <summary>
+    /// Course object
+    /// </summary>
     public class Course
     {
         public string Name { get; set; }
