@@ -26,11 +26,14 @@ namespace CurriculumVisualize
     public partial class MainWindow : Window
     {
         private List<Course> CourseList { get; set; }
+        private List<Course> AvailableCourses { get; set; }
         public MainWindow()
         {
             InitializeComponent();
             CourseList = new List<Course>();
-            CourseBox.ItemsSource = CourseList;
+            AvailableCourses = new List<Course>();
+            listBox.ItemsSource = CourseList;
+            CourseBox.ItemsSource = AvailableCourses;
         }
         /// <summary>
         /// Method to add a course to the list
@@ -48,30 +51,8 @@ namespace CurriculumVisualize
             if (courseCount == 0)
             {
                 CourseList.Add(new Course(courseName, courseCode));
-                CourseBox.ItemsSource = null;
-                CourseBox.ItemsSource = CourseList;
-            }
-        }
-        /// <summary>
-        /// Method to handle adding a prerequisite
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AddReq_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var selectedCourse = (Course) CourseBox.SelectedItem;
-
-                var course = CourseList.Where(c => c.CourseCode.Equals(PrereqField.Text)).First();
-                if (course == null)
-                    return;
-                selectedCourse.Prerequisites.Add(course);
-                PrereqBox.ItemsSource = null;
-                PrereqBox.ItemsSource = selectedCourse.Prerequisites;
-            } catch (Exception ex)
-            {
-
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = CourseList;
             }
         }
 
@@ -79,24 +60,10 @@ namespace CurriculumVisualize
         {
 
         }
-        /// <summary>
-        /// Gets the currently selected item in the Course Box and displays their requirements (if any) in the prerequisite box
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+
         private void CourseBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            try
-            {
-                var selectedCourse = (Course)CourseBox.SelectedItem;
-                PrereqBox.ItemsSource = null;
-                PrereqBox.ItemsSource = selectedCourse.Prerequisites;
-                CodeField.Text = selectedCourse.CourseCode;
-                NameField.Text = selectedCourse.Name;
-            } catch (Exception ex)
-            {
 
-            } 
         }
         /// <summary>
         /// Construct a Graphviz dot file from the courses
@@ -128,25 +95,21 @@ namespace CurriculumVisualize
                     vertices.Add(course.Name, reqs);
                 }
                 var graph = vertices.ToVertexAndEdgeListGraph(kv => Array.ConvertAll(kv.Value, v => new SEquatableEdge<string>(kv.Key, v)));
-                var graphviz = graph.ToGraphviz();
+                var graphviz = graph.ToBidirectionalGraph().ToGraphviz(); //graph.ToGraphviz(); 
                 StringReader reader = new StringReader(graphviz);
                 var line = "";
                 var graphOutput = "";
                 while ((line = reader.ReadLine()) != null)
-                {
                     graphOutput += line.PadLeft(25) + "\n";
-                }
                 // replace indexes in graph with their name
                 for (int i = 0; i < CourseList.Count; i++)
-                {
                     graphOutput = graphOutput.Replace($" {i} ", $"\"{CourseList[i].Name}\"");
-                }
                 // Output the graph
                 textBox.Text = graphOutput;
 
             } catch (Exception ex)
             {
-                throw;
+                textBox.Text = "An error has ocurred!\n" + ex;
             }
         }
         /// <summary>
@@ -195,9 +158,99 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            CourseList.Remove((Course)CourseBox.SelectedItem);
+            CourseList.Remove((Course)listBox.SelectedItem);
+            listBox.ItemsSource = null;
+            listBox.ItemsSource = CourseList;
+            RefreshCourses();
+        }
+
+        private void CourseBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (CourseBox.Items.Count == 0)
+                return;
+        }
+        /// <summary>
+        /// Add the selected prerequisite 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button4_Click(object sender, RoutedEventArgs e)
+        {
+            var prereqCourse = (Course)CourseBox.SelectedItem;
+            var mainCourse = (Course)listBox.SelectedItem;
+            mainCourse.Prerequisites.Add(prereqCourse);
+
+            // Update the course
+            PrereqBox.ItemsSource = null;
+            PrereqBox.ItemsSource = mainCourse.Prerequisites;
+            RefreshCourses();
+
+        }
+        /// <summary>
+        /// Remove the selected prerequisite
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button5_Click(object sender, RoutedEventArgs e)
+        {
+            // Remove the prerequisite
+            var prerequisite = (Course)PrereqBox.SelectedItem;
+            Course course = (Course)listBox.SelectedItem;
+            course.Prerequisites.Remove(prerequisite);
+
+            // Update prerequisites
+            PrereqBox.ItemsSource = null;
+            PrereqBox.ItemsSource = course.Prerequisites;
+            RefreshCourses();
+        }
+        /// <summary>
+        /// When the selection in the top main listBox is changed, update the courses that can be moved to the prerequisites
+        /// in the CourseBox. THe box should contain all the courses except for itself and the prerequisites
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                var course = (Course)listBox.SelectedItem;
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = course.Prerequisites;
+                RefreshCourses();
+            } catch (NullReferenceException n)
+            {
+                listBox.SelectedIndex = 0;
+                RefreshCourses();
+            }
+        }
+        /// <summary>
+        /// Refreshes the courses that can be added to the prerequisites
+        /// </summary>
+        private void RefreshCourses()
+        {
+            // get the available courses
+            AvailableCourses = new List<Course>(CourseList);
+            // Remove the selected course from the main course box from this list
+            var selectedCourse = (Course)listBox.SelectedItem;
+            AvailableCourses.Remove(AvailableCourses.First(course => course.Name.Equals(selectedCourse.Name)));
+
+            // Remove courses if they exist in the prequisites
+            // TODO:
+            foreach (var course in selectedCourse.Prerequisites)
+            {
+                try
+                {
+                    // Find the course in the prerequisites and remove it from that othr box
+                    var x = AvailableCourses.First(c => c.CourseCode.Equals(course.CourseCode));
+                    AvailableCourses.Remove(x);
+                } catch (Exception ex)
+                {
+                    // no results
+                }
+            }
+            // Update the Course List
             CourseBox.ItemsSource = null;
-            CourseBox.ItemsSource = CourseList;
+            CourseBox.ItemsSource = AvailableCourses;
         }
     }
     /// <summary>
