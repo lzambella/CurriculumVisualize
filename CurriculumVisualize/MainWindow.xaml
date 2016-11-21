@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CurriculumVisualize"
         mc:Ignorable="d"
-        Title="Course Visualization" Height="909.5" Width="1210" Background="White" MinHeight="460" MinWidth="445" ResizeMode="NoResize">
-    <Grid Margin="0,0,2,0">
-        <Grid Margin="10,10,10,12" RenderTransformOrigin="0.499,0.498">
+        Title="Course Visualization" Height="573.5" Width="592" Background="White" MinHeight="460" MinWidth="445" ResizeMode="NoResize">
+    <Grid Margin="0,0,2,0" Height="498" VerticalAlignment="Top">
+        <Grid Margin="10,10,10,0" RenderTransformOrigin="0.499,0.498">
             <Grid.RowDefinitions>
                 <RowDefinition Height="221*"/>
                 <RowDefinition Height="76*"/>
@@ -20,7 +20,7 @@
                 <ColumnDefinition Width="36*"/>
                 <ColumnDefinition Width="161*"/>
             </Grid.ColumnDefinitions>
-            <ListBox x:Name="CourseBox" Margin="10,5,10,1" SelectionChanged="CourseBox_SelectionChanged" MouseDown="CourseBox_MouseDown" Grid.RowSpan="2" Grid.Row="1">
+            <ListBox x:Name="CourseBox" Margin="10,19,10,108" SelectionChanged="CourseBox_SelectionChanged" MouseDown="CourseBox_MouseDown" Grid.Row="4">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -29,8 +29,8 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Label x:Name="label" Content="Available courses" FontWeight="SemiBold" Margin="10,193,31,0" Height="26" VerticalAlignment="Top"/>
-            <ListBox x:Name="PrereqBox" Margin="10,5,10,1" SelectionChanged="PrereqBox_SelectionChanged" Grid.Column="2" AllowDrop="True" Grid.RowSpan="2" Grid.Row="1">
+            <Label x:Name="label" Content="Available courses" FontWeight="SemiBold" Margin="10,33,31,0" Height="26" VerticalAlignment="Top" Grid.Row="2" Grid.RowSpan="3"/>
+            <ListBox x:Name="PrereqBox" Margin="10,19,10,108" SelectionChanged="PrereqBox_SelectionChanged" Grid.Column="2" AllowDrop="True" Grid.Row="4">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -39,18 +39,17 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Label x:Name="label1" Content="Prerequisites" Margin="0,0,14,2" FontWeight="Medium" Grid.Column="2" Height="26" VerticalAlignment="Bottom"/>
-            <Label x:Name="label2" Content="Course Code&#xA;" HorizontalAlignment="Left" Margin="10,14,0,0" VerticalAlignment="Top" Height="25" Width="81" Grid.Row="4"/>
-            <TextBox x:Name="CodeField" Height="23" Margin="96,13,6,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.894,0.667" Grid.Row="4"/>
-            <Label x:Name="label3" Content="Course Name" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.14,-0.244" Width="81" Height="26" Grid.Row="4"/>
-            <TextBox x:Name="NameField" Height="23" Margin="96,41,6,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="4"/>
-            <Button x:Name="AddCourse" Content="Add New Course" HorizontalAlignment="Left" Margin="10,13,0,0" VerticalAlignment="Top" Width="137" Click="button_Click" Height="23" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
-            <Button x:Name="button1" Content="Deleted selected course" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top" Width="137" Click="button1_Click" Height="23" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
-            <TextBox x:Name="textBox" Margin="10,69,10,30" TextWrapping="Wrap" Text="Graphviz output..." Grid.Row="4" Grid.ColumnSpan="3"/>
-            <Button x:Name="button2" Content="Save List" Margin="10,0,0,5" Click="button2_Click" Grid.Row="4" HorizontalAlignment="Left" Width="90" Height="20" VerticalAlignment="Bottom"/>
-            <Button x:Name="button3" Content="Open List" Margin="105,0,0,5" Click="button3_Click" Grid.Row="4" HorizontalAlignment="Left" Width="91" Height="20" VerticalAlignment="Bottom"/>
-            <Button x:Name="button" Content="Graph" Margin="0,0,14,5" VerticalAlignment="Bottom" Click="button_Click_1" Height="20" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right" Width="113"/>
-            <ListBox x:Name="listBox" Margin="10,32,10,0" Grid.ColumnSpan="3" Height="156" VerticalAlignment="Top" SelectionChanged="listBox_SelectionChanged">
+            <Label x:Name="label1" Content="Prerequisites" Margin="0,0,14,260" FontWeight="Medium" Grid.Column="2" Height="26" VerticalAlignment="Bottom" Grid.Row="2" Grid.RowSpan="3"/>
+            <Label x:Name="label2" Content="Course Code&#xA;" HorizontalAlignment="Left" Margin="10,193,0,0" VerticalAlignment="Top" Height="25" Width="81" Grid.Row="4"/>
+            <TextBox x:Name="CodeField" Height="23" Margin="96,192,6,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.894,0.667" Grid.Row="4"/>
+            <Label x:Name="label3" Content="Course Name" HorizontalAlignment="Left" Margin="10,217,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.14,-0.244" Width="81" Height="26" Grid.Row="4"/>
+            <TextBox x:Name="NameField" Height="23" Margin="96,220,6,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="4"/>
+            <Button x:Name="AddCourse" Content="Add New Course" HorizontalAlignment="Left" Margin="10,192,0,0" VerticalAlignment="Top" Width="137" Click="button_Click" Height="23" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Button x:Name="button1" Content="Deleted selected course" HorizontalAlignment="Left" Margin="10,220,0,0" VerticalAlignment="Top" Width="137" Click="button1_Click" Height="23" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Button x:Name="button2" Content="Save List" Margin="10,0,0,-30" Click="button2_Click" Grid.Row="4" HorizontalAlignment="Left" Width="90" Height="20" VerticalAlignment="Bottom"/>
+            <Button x:Name="button3" Content="Open List" Margin="109,0,0,-30" Click="button3_Click" Grid.Row="4" HorizontalAlignment="Left" Width="91" Height="20" VerticalAlignment="Bottom"/>
+            <Button x:Name="button" Content="Graph" Margin="0,0,10,-30" VerticalAlignment="Bottom" Click="button_Click_1" Height="20" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right" Width="113"/>
+            <ListBox x:Name="listBox" Margin="10,32,10,0" Grid.ColumnSpan="3" Height="156" VerticalAlignment="Top" SelectionChanged="listBox_SelectionChanged" Grid.RowSpan="3">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -60,8 +59,8 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <Label x:Name="label4" Content="All courses" HorizontalAlignment="Left" Margin="10,1,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3" Width="668" Height="26"/>
-            <Button x:Name="button4" Content="&gt;&gt;" Margin="10,46,10,0" Click="button4_Click" Grid.Column="1" Grid.Row="1" Height="20" VerticalAlignment="Top"/>
-            <Button x:Name="button5" Content="&lt;&lt;" Margin="10,0,10,39" Click="button5_Click" Grid.Column="1" Grid.Row="2" Height="20" VerticalAlignment="Bottom"/>
+            <Button x:Name="button4" Content="&gt;&gt;" Margin="10,60,10,0" Click="button4_Click" Grid.Column="1" Grid.Row="4" Height="20" VerticalAlignment="Top"/>
+            <Button x:Name="button5" Content="&lt;&lt;" Margin="10,0,10,146" Click="button5_Click" Grid.Column="1" Grid.Row="4" Height="20" VerticalAlignment="Bottom"/>
         </Grid>
 
     </Grid>
