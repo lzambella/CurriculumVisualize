@@ -181,8 +181,8 @@ namespace CurriculumVisualize
 
                 // Use the Deserialize method to restore the object's state.
                 CourseList = (List<Course>)serializer.Deserialize(reader);
-                CourseBox.ItemsSource = null;
-                CourseBox.ItemsSource = CourseList;
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = CourseList;
                 fs.Close();
             }
             catch (Exception)
