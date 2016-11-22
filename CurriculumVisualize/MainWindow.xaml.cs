@@ -2,26 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using QuickGraph;
-using QuickGraph.Graphviz;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
-using Shields.GraphViz;
 using Shields.GraphViz.Components;
 using Shields.GraphViz.Models;
 using Shields.GraphViz.Services;
 using System.Collections.Immutable;
+using Microsoft.Win32;
 
 namespace CurriculumVisualize
 {
@@ -79,46 +70,12 @@ namespace CurriculumVisualize
         {
             try
             {
-                /*
-                // The dictionary will use the CourseList index and then add edges from the other indexes
-                var vertices = new Dictionary<string, string[]>(); // vertex -> target edges
-                foreach (var course in CourseList)
-                {
-                    var mainCourseIndex = CourseList.IndexOf(course);
-                    // Contains the indexes of the requirements from CourseList
-                    var reqs = new string[course.Prerequisites.Count];
-                    // Go through all the requirements and add them to the array
-                    var index = 0;
-                    foreach (var req in course.Prerequisites)
-                    {
-                        // get the index
-                        var courseIndex = CourseList.IndexOf(req);
-                        // Add the index
-                        //reqs[index] = courseIndex;
-                        reqs[index] = req.Name;
-                        index++;
-                    }
-                    vertices.Add(course.Name, reqs);
-                }
-                var graph = vertices.ToVertexAndEdgeListGraph(kv => Array.ConvertAll(kv.Value, v => new SEquatableEdge<string>(kv.Key, v)));
-                var graphviz = graph.ToBidirectionalGraph().ToGraphviz(); //graph.ToGraphviz(); 
-                StringReader reader = new StringReader(graphviz);
-                var line = "";
-                var graphOutput = "";
-                while ((line = reader.ReadLine()) != null)
-                    graphOutput += line.PadLeft(25) + "\n";
-                // replace indexes in graph with their name
-                for (int i = 0; i < CourseList.Count; i++)
-                    graphOutput = graphOutput.Replace($" {i} ", $"\"{CourseList[i].Name}\"");
-                // Output the graph
-                //textBox.Text = graphOutput;
-                */
-
                 // New graphing function;
                 ImmutableList<Statement> statements = ImmutableList.Create<Statement>();
                 Graph g = Graph.Undirected;
                 for (var course = 0; course < CourseList.Count(); course++)
                 {
+                    // If course has no prerequisites then add a single node
                     if (CourseList[course].Prerequisites.Count() == 0)
                     {
                         g = g.Add(NodeStatement.For($"{CourseList[course].Name}"));
@@ -151,13 +108,19 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button2_Click(object sender, RoutedEventArgs e)
         {
-            System.Xml.Serialization.XmlSerializer x = new System.Xml.Serialization.XmlSerializer(CourseList.GetType());
+            XmlSerializer x = new System.Xml.Serialization.XmlSerializer(CourseList.GetType());
             try
             {
-                
-                var streamWriter = new System.IO.StreamWriter("list.xml", false, Encoding.Unicode, 8092);
-                x.Serialize(streamWriter, CourseList);
-                streamWriter.Close();
+                var saveDialog = new SaveFileDialog();
+                saveDialog.Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*";
+                saveDialog.FilterIndex = 2;
+                saveDialog.RestoreDirectory = true;
+                if (saveDialog.ShowDialog() == true)
+                {
+                    var streamWriter = new StreamWriter(saveDialog.FileName, false, Encoding.Unicode, 8092);
+                    x.Serialize(streamWriter, CourseList);
+                    streamWriter.Close();
+                }
             } catch (Exception ex)
             {
 
@@ -172,18 +135,23 @@ namespace CurriculumVisualize
         {
             try
             {
-                // Create an instance of the XmlSerializer specifying type and namespace.
-                XmlSerializer serializer = new XmlSerializer(typeof(List<Course>));
+                var openDialog = new OpenFileDialog();
+                openDialog.Filter = "XML Files (*.xml)|*.xml";
+                openDialog.FilterIndex = 1;
+                openDialog.RestoreDirectory = true;
 
-                // A FileStream is needed to read the XML document.
-                FileStream fs = new FileStream("list.xml", FileMode.Open);
-                XmlReader reader = XmlReader.Create(fs);
+                if (openDialog.ShowDialog() == true)
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Course>));
 
-                // Use the Deserialize method to restore the object's state.
-                CourseList = (List<Course>)serializer.Deserialize(reader);
-                listBox.ItemsSource = null;
-                listBox.ItemsSource = CourseList;
-                fs.Close();
+                    FileStream fs = new FileStream(openDialog.FileName, FileMode.Open);
+                    XmlReader reader = XmlReader.Create(fs);
+
+                    CourseList = (List<Course>)serializer.Deserialize(reader);
+                    listBox.ItemsSource = null;
+                    listBox.ItemsSource = CourseList;
+                    fs.Close();
+                }
             }
             catch (Exception)
             {
