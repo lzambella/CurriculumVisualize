@@ -1,6 +1,7 @@
 # Curriculum Visualization
 CV is used to visualize course requirements for a certain course. All the courses should be added first before adding their requirements. 
-A requirement is added by selecting the course and entering in the prerequisite's course code. The output is currenty a Graphviz dot file.
+A requirement is added by selecting the course from the master list and then moving from the list of aviable coursres as prequisites to the prerequisites box. You can easily create a graph of the courses by clicking graph.
 
-## Bugs
-* Saving a list only saves up to 4KB
+## Todo
+* Choose custom graph file to save
+* Fix ui scaling so I can reenable window resizing
