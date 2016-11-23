@@ -2,21 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using QuickGraph;
-using QuickGraph.Graphviz;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
+using Shields.GraphViz.Components;
+using Shields.GraphViz.Models;
+using Shields.GraphViz.Services;
+using System.Collections.Immutable;
+using Microsoft.Win32;
 
 namespace CurriculumVisualize
 {
@@ -26,13 +22,20 @@ namespace CurriculumVisualize
     public partial class MainWindow : Window
     {
         private List<Course> CourseList { get; set; }
+        private List<Course> AvailableCourses { get; set; }
         public MainWindow()
         {
             InitializeComponent();
             CourseList = new List<Course>();
-            CourseBox.ItemsSource = CourseList;
+            AvailableCourses = new List<Course>();
+            listBox.ItemsSource = CourseList;
+            CourseBox.ItemsSource = AvailableCourses;
         }
-
+        /// <summary>
+        /// Method to add a course to the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button_Click(object sender, RoutedEventArgs e)
         {
             var courseName = NameField.Text;
@@ -44,26 +47,8 @@ namespace CurriculumVisualize
             if (courseCount == 0)
             {
                 CourseList.Add(new Course(courseName, courseCode));
-                CourseBox.ItemsSource = null;
-                CourseBox.ItemsSource = CourseList;
-            }
-        }
-
-        private void AddReq_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var selectedCourse = (Course) CourseBox.SelectedItem;
-
-                var course = CourseList.Where(c => c.CourseCode.Equals(PrereqField.Text)).First();
-                if (course == null)
-                    return;
-                selectedCourse.Prerequisites.Add(course);
-                PrereqBox.ItemsSource = null;
-                PrereqBox.ItemsSource = selectedCourse.Prerequisites;
-            } catch (Exception ex)
-            {
-
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = CourseList;
             }
         }
 
@@ -74,62 +59,45 @@ namespace CurriculumVisualize
 
         private void CourseBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            try
-            {
-                var selectedCourse = (Course)CourseBox.SelectedItem;
-                PrereqBox.ItemsSource = null;
-                PrereqBox.ItemsSource = selectedCourse.Prerequisites;
-                CodeField.Text = selectedCourse.CourseCode;
-                NameField.Text = selectedCourse.Name;
-            } catch (Exception ex)
-            {
 
-            } 
         }
-
-        private void button_Click_1(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Construct a Graphviz dot file from the courses
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void button_Click_1(object sender, RoutedEventArgs e)
         {
             try
             {
-                // The dictionary will use the CourseList index and then add edges from the other indexes
-                var vertices = new Dictionary<string, string[]>(); // vertex -> target edges
-                foreach (var course in CourseList)
+                // New graphing function;
+                ImmutableList<Statement> statements = ImmutableList.Create<Statement>();
+                Graph g = Graph.Undirected;
+                for (var course = 0; course < CourseList.Count(); course++)
                 {
-                    var mainCourseIndex = CourseList.IndexOf(course);
-                    // Contains the indexes of the requirements from CourseList
-                    var reqs = new string[course.Prerequisites.Count];
-                    // Go through all the requirements and add them to the array
-                    var index = 0;
-                    foreach (var req in course.Prerequisites)
+                    // If course has no prerequisites then add a single node
+                    if (CourseList[course].Prerequisites.Count() == 0)
                     {
-                        // get the index
-                        var courseIndex = CourseList.IndexOf(req);
-                        // Add the index
-                        //reqs[index] = courseIndex;
-                        reqs[index] = req.Name;
-                        index++;
+                        g = g.Add(NodeStatement.For($"{CourseList[course].Name}"));
+                        continue;
                     }
-                    vertices.Add(course.Name, reqs);
+                    for (var prereq = 0; prereq < CourseList[course].Prerequisites.Count(); prereq++)
+                    {
+                        g = g.Add(EdgeStatement.For($"{CourseList[course].Name}", $"{CourseList[course].Prerequisites[prereq].Name}"));
+                    }
                 }
-                var graph = vertices.ToVertexAndEdgeListGraph(kv => Array.ConvertAll(kv.Value, v => new SEquatableEdge<string>(kv.Key, v)));
-                var graphviz = graph.ToGraphviz();
-                StringReader reader = new StringReader(graphviz);
-                var line = "";
-                var graphOutput = "";
-                while ((line = reader.ReadLine()) != null)
+                IRenderer renderer = new Renderer($"{Directory.GetCurrentDirectory()}\\graphviz");
+                Console.WriteLine(Directory.GetCurrentDirectory());
+                using (Stream file = File.Create("graph.png"))
                 {
-                    graphOutput += line.PadLeft(25) + "\n";
+                    await renderer.RunAsync(g, file, RendererLayouts.Dot, RendererFormats.Png, System.Threading.CancellationToken.None);
+                    file.Close();
                 }
-                // replace indexes in graph with their name
-                for (int i = 0; i < CourseList.Count; i++)
-                {
-                    graphOutput = graphOutput.Replace($" {i} ", $"\"{CourseList[i].Name}\"");
-                }
-                // Output the graph
-                textBox.Text = graphOutput;
 
             } catch (Exception ex)
             {
+                //textBox.Text = "An error has ocurred!\n" + ex;
+                Console.WriteLine(ex);
                 throw;
             }
         }
@@ -140,13 +108,19 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button2_Click(object sender, RoutedEventArgs e)
         {
-            System.Xml.Serialization.XmlSerializer x = new System.Xml.Serialization.XmlSerializer(CourseList.GetType());
+            XmlSerializer x = new System.Xml.Serialization.XmlSerializer(CourseList.GetType());
             try
             {
-                
-                var streamWriter = new System.IO.StreamWriter("list.xml", false, Encoding.Unicode, 8092);
-                x.Serialize(streamWriter, CourseList);
-                streamWriter.Close();
+                var saveDialog = new SaveFileDialog();
+                saveDialog.Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*";
+                saveDialog.FilterIndex = 2;
+                saveDialog.RestoreDirectory = true;
+                if (saveDialog.ShowDialog() == true)
+                {
+                    var streamWriter = new StreamWriter(saveDialog.FileName, false, Encoding.Unicode, 8092);
+                    x.Serialize(streamWriter, CourseList);
+                    streamWriter.Close();
+                }
             } catch (Exception ex)
             {
 
@@ -159,18 +133,30 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button3_Click(object sender, RoutedEventArgs e)
         {
-            // Create an instance of the XmlSerializer specifying type and namespace.
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Course>));
+            try
+            {
+                var openDialog = new OpenFileDialog();
+                openDialog.Filter = "XML Files (*.xml)|*.xml";
+                openDialog.FilterIndex = 1;
+                openDialog.RestoreDirectory = true;
 
-            // A FileStream is needed to read the XML document.
-            FileStream fs = new FileStream("list.xml", FileMode.Open);
-            XmlReader reader = XmlReader.Create(fs);
+                if (openDialog.ShowDialog() == true)
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Course>));
 
-            // Use the Deserialize method to restore the object's state.
-            CourseList = (List<Course>)serializer.Deserialize(reader);
-            CourseBox.ItemsSource = null;
-            CourseBox.ItemsSource = CourseList;
-            fs.Close();
+                    FileStream fs = new FileStream(openDialog.FileName, FileMode.Open);
+                    XmlReader reader = XmlReader.Create(fs);
+
+                    CourseList = (List<Course>)serializer.Deserialize(reader);
+                    listBox.ItemsSource = null;
+                    listBox.ItemsSource = CourseList;
+                    fs.Close();
+                }
+            }
+            catch (Exception)
+            {
+
+            }
         }
         /// <summary>
         /// Delete the selected course from CourseBox
@@ -179,11 +165,119 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            CourseList.Remove((Course)CourseBox.SelectedItem);
-            CourseBox.ItemsSource = null;
-            CourseBox.ItemsSource = CourseList;
+            CourseList.Remove((Course)listBox.SelectedItem);
+            listBox.ItemsSource = null;
+            listBox.ItemsSource = CourseList;
+            RefreshCourses();
+        }
+
+        private void CourseBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (CourseBox.Items.Count == 0)
+                return;
+        }
+        /// <summary>
+        /// Add the selected prerequisite 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button4_Click(object sender, RoutedEventArgs e)
+        {
+            var prereqCourse = (Course)CourseBox.SelectedItem;
+            var mainCourse = (Course)listBox.SelectedItem;
+            mainCourse.Prerequisites.Add(prereqCourse);
+
+            // Update the course
+            PrereqBox.ItemsSource = null;
+            PrereqBox.ItemsSource = mainCourse.Prerequisites;
+            RefreshCourses();
+
+        }
+        /// <summary>
+        /// Remove the selected prerequisite
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button5_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Remove the prerequisite
+                var prerequisite = (Course)PrereqBox.SelectedItem;
+                Course course = (Course)listBox.SelectedItem;
+                course.Prerequisites.Remove(prerequisite);
+
+                // Update prerequisites
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = course.Prerequisites;
+                RefreshCourses();
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+        /// <summary>
+        /// When the selection in the top main listBox is changed, update the courses that can be moved to the prerequisites
+        /// in the CourseBox. THe box should contain all the courses except for itself and the prerequisites
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                var course = (Course)listBox.SelectedItem;
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = course.Prerequisites;
+                RefreshCourses();
+            } catch (NullReferenceException n)
+            {
+                listBox.SelectedIndex = 0;
+                RefreshCourses();
+            }
+        }
+        /// <summary>
+        /// Refreshes the courses that can be added to the prerequisites (left box)
+        /// </summary>
+        private void RefreshCourses()
+        {
+            try
+            {
+                // get the available courses
+                AvailableCourses = new List<Course>(CourseList);
+                // Remove the selected course from the main course box from this list
+                var selectedCourse = (Course)listBox.SelectedItem;
+                AvailableCourses.Remove(AvailableCourses.First(course => course.Name.Equals(selectedCourse.Name)));
+
+                // Remove courses from availablecourses if they exist in the prequisites
+                foreach (var course in selectedCourse.Prerequisites)
+                {
+                    try
+                    {
+                        // Find the course in the prerequisites and remove it from that othr box
+                        var x = AvailableCourses.First(c => c.CourseCode.Equals(course.CourseCode));
+                        AvailableCourses.Remove(x);
+                    }
+                    catch (Exception
+                  ex)
+                    {
+                        // no results
+                    }
+                }
+                // Update the Course List
+                CourseBox.ItemsSource = null;
+                CourseBox.ItemsSource = AvailableCourses;
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
+    /// <summary>
+    /// Course object
+    /// </summary>
     public class Course
     {
         public string Name { get; set; }
