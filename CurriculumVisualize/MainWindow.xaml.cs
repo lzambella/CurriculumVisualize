@@ -200,15 +200,22 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button5_Click(object sender, RoutedEventArgs e)
         {
-            // Remove the prerequisite
-            var prerequisite = (Course)PrereqBox.SelectedItem;
-            Course course = (Course)listBox.SelectedItem;
-            course.Prerequisites.Remove(prerequisite);
+            try
+            {
+                // Remove the prerequisite
+                var prerequisite = (Course)PrereqBox.SelectedItem;
+                Course course = (Course)listBox.SelectedItem;
+                course.Prerequisites.Remove(prerequisite);
 
-            // Update prerequisites
-            PrereqBox.ItemsSource = null;
-            PrereqBox.ItemsSource = course.Prerequisites;
-            RefreshCourses();
+                // Update prerequisites
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = course.Prerequisites;
+                RefreshCourses();
+            }
+            catch (Exception)
+            {
+
+            }
         }
         /// <summary>
         /// When the selection in the top main listBox is changed, update the courses that can be moved to the prerequisites
