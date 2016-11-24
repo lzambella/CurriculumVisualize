@@ -165,10 +165,17 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            CourseList.Remove((Course)listBox.SelectedItem);
-            listBox.ItemsSource = null;
-            listBox.ItemsSource = CourseList;
-            RefreshCourses();
+            try
+            {
+                CourseList.Remove((Course)listBox.SelectedItem);
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = CourseList;
+                RefreshCourses();
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void CourseBox_MouseDown(object sender, MouseEventArgs e)
@@ -183,14 +190,21 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            var prereqCourse = (Course)CourseBox.SelectedItem;
-            var mainCourse = (Course)listBox.SelectedItem;
-            mainCourse.Prerequisites.Add(prereqCourse);
+            try
+            {
+                var prereqCourse = (Course)CourseBox.SelectedItem;
+                var mainCourse = (Course)listBox.SelectedItem;
+                mainCourse.Prerequisites.Add(prereqCourse);
 
-            // Update the course
-            PrereqBox.ItemsSource = null;
-            PrereqBox.ItemsSource = mainCourse.Prerequisites;
-            RefreshCourses();
+                // Update the course
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = mainCourse.Prerequisites;
+                RefreshCourses();
+            }
+            catch (Exception)
+            {
+
+            }
 
         }
         /// <summary>
