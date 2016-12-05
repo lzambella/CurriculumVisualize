@@ -42,7 +42,7 @@ namespace CurriculumVisualize
             var courseCode = CodeField.Text.ToUpper();
             NameField.Text = "";
             CodeField.Text = "";
-            var courseCount = CourseList.Where(course => course.CourseCode.Equals(courseCode)).Count();
+            var courseCount = CourseList.Count(course => course.CourseCode.Equals(courseCode));
             // If the course doesnt already exist
             if (courseCount == 0)
             {
@@ -71,12 +71,11 @@ namespace CurriculumVisualize
             try
             {
                 // New graphing function;
-                ImmutableList<Statement> statements = ImmutableList.Create<Statement>();
                 Graph g = Graph.Undirected;
                 for (var course = 0; course < CourseList.Count(); course++)
                 {
                     // If course has no prerequisites then add a single node
-                    if (CourseList[course].Prerequisites.Count() == 0)
+                    if (!CourseList[course].Prerequisites.Any())
                     {
                         g = g.Add(NodeStatement.For($"{CourseList[course].Name}"));
                         continue;
@@ -92,6 +91,7 @@ namespace CurriculumVisualize
                 {
                     await renderer.RunAsync(g, file, RendererLayouts.Dot, RendererFormats.Png, System.Threading.CancellationToken.None);
                     file.Close();
+
                 }
 
             } catch (Exception ex)
@@ -111,19 +111,22 @@ namespace CurriculumVisualize
             XmlSerializer x = new System.Xml.Serialization.XmlSerializer(CourseList.GetType());
             try
             {
-                var saveDialog = new SaveFileDialog();
-                saveDialog.Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*";
-                saveDialog.FilterIndex = 2;
-                saveDialog.RestoreDirectory = true;
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*",
+                    FilterIndex = 2,
+                    RestoreDirectory = true
+                };
                 if (saveDialog.ShowDialog() == true)
                 {
                     var streamWriter = new StreamWriter(saveDialog.FileName, false, Encoding.Unicode, 8092);
                     x.Serialize(streamWriter, CourseList);
                     streamWriter.Close();
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
         /// <summary>
@@ -135,10 +138,12 @@ namespace CurriculumVisualize
         {
             try
             {
-                var openDialog = new OpenFileDialog();
-                openDialog.Filter = "XML Files (*.xml)|*.xml";
-                openDialog.FilterIndex = 1;
-                openDialog.RestoreDirectory = true;
+                var openDialog = new OpenFileDialog
+                {
+                    Filter = "XML Files (*.xml)|*.xml",
+                    FilterIndex = 1,
+                    RestoreDirectory = true
+                };
 
                 if (openDialog.ShowDialog() == true)
                 {
@@ -153,9 +158,9 @@ namespace CurriculumVisualize
                     fs.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
         /// <summary>
@@ -165,10 +170,17 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            CourseList.Remove((Course)listBox.SelectedItem);
-            listBox.ItemsSource = null;
-            listBox.ItemsSource = CourseList;
-            RefreshCourses();
+            try
+            {
+                CourseList.Remove((Course)listBox.SelectedItem);
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = CourseList;
+                RefreshCourses();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         private void CourseBox_MouseDown(object sender, MouseEventArgs e)
@@ -183,14 +195,21 @@ namespace CurriculumVisualize
         /// <param name="e"></param>
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            var prereqCourse = (Course)CourseBox.SelectedItem;
-            var mainCourse = (Course)listBox.SelectedItem;
-            mainCourse.Prerequisites.Add(prereqCourse);
+            try
+            {
+                var prereqCourse = (Course)CourseBox.SelectedItem;
+                var mainCourse = (Course)listBox.SelectedItem;
+                mainCourse.Prerequisites.Add(prereqCourse);
 
-            // Update the course
-            PrereqBox.ItemsSource = null;
-            PrereqBox.ItemsSource = mainCourse.Prerequisites;
-            RefreshCourses();
+                // Update the course
+                PrereqBox.ItemsSource = null;
+                PrereqBox.ItemsSource = mainCourse.Prerequisites;
+                RefreshCourses();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
         }
         /// <summary>
@@ -212,9 +231,9 @@ namespace CurriculumVisualize
                 PrereqBox.ItemsSource = course.Prerequisites;
                 RefreshCourses();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
         /// <summary>
@@ -269,9 +288,9 @@ namespace CurriculumVisualize
                 CourseBox.ItemsSource = null;
                 CourseBox.ItemsSource = AvailableCourses;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
     }
